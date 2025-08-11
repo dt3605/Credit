@@ -1,60 +1,70 @@
-#include <cs50.h>
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 int main(void)
 {
-    long number = get_long("Number: ");
-    int sum1 = 0, sum2 = 0, total = 0;
-    int count = 0;
-    long temp = number;
+    char number[20];
 
-    // Luhn's algorithm
-    while (temp > 0)
+    printf("Number: ");
+    if (fgets(number, sizeof(number), stdin) == NULL)
     {
-        int digit = temp % 10;
-        if (count % 2 == 0)
+        printf("INVALID\n");
+        return 1;
+    }
+
+    size_t len = strlen(number);
+    if (number[len - 1] == '\n')
+    {
+        number[len - 1] = '\0';
+        len--;
+    }
+
+    for (size_t i = 0; i < len; i++)
+    {
+        if (!isdigit(number[i]))
         {
-            sum1 += digit;
+            printf("INVALID\n");
+            return 1;
+        }
+    }
+
+    int sum1 = 0, sum2 = 0;
+
+    for (int i = (int)len - 1, pos = 1; i >= 0; i--, pos++)
+    {
+        int digit = number[i] - '0';
+
+        if (pos % 2 == 0)
+        {
+            int product = digit * 2;
+            sum1 += product / 10 + product % 10;
         }
         else
         {
-            int doubled = digit * 2;
-            sum2 += (doubled / 10) + (doubled % 10);
+            sum2 += digit;
         }
-        temp /= 10;
-        count++;
     }
 
-    total = sum1 + sum2;
+    int total = sum1 + sum2;
 
-    // Check Luhn
     if (total % 10 != 0)
     {
         printf("INVALID\n");
         return 0;
     }
 
-    // Identify card type
-    long start_digits = number;
-    while (start_digits >= 100)
-    {
-        start_digits /= 10;
-    }
+    int first_digit = number[0] - '0';
+    int first_two_digits = (number[0] - '0') * 10 + (number[1] - '0');
 
-    if ((start_digits == 34 || start_digits == 37) && count == 15)
-    {
+    if (len == 15 && (first_two_digits == 34 || first_two_digits == 37))
         printf("AMEX\n");
-    }
-    else if (start_digits >= 51 && start_digits <= 55 && count == 16)
-    {
+    else if (len == 16 && (first_two_digits >= 51 && first_two_digits <= 55))
         printf("MASTERCARD\n");
-    }
-    else if ((start_digits / 10) == 4 && (count == 13 || count == 16))
-    {
+    else if ((len == 13 || len == 16) && first_digit == 4)
         printf("VISA\n");
-    }
     else
-    {
         printf("INVALID\n");
-    }
+
+    return 0;
 }
